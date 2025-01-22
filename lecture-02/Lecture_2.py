@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 # use pandas to load real_estate_dataset.csv 
 df = pd.read_csv("real_estate_dataset.csv")
@@ -197,3 +198,76 @@ coefs_svd = X_pinv @ y
 
 # Save coefs_svd to a file named coefs_svd.csv
 np.savetxt("coefs_svd.csv", coefs_svd, delimiter = ",")
+
+
+# write X as a product of U, S and Vt
+X_svd = U @ np.diag(S) @ Vt
+
+# Solve for X_svd @ coeffs_svd = y
+
+# Normal equation : X_svd^T @ X_svd @ coefs_svd = X_svd^T @ y
+# replace X_svd with U @ np.diag(S) @ Vt
+# Vt^T @ np.diag(S)^2 @ Vt @ coefs_svd = Vt^T @ np.diag(S) @ U^T @ y
+# np.diag(S)^2 @ Vt @ coefs_svd = np.diag(S) @ U^T @ y
+# coefs_svd = Vt @ np.diag(S)^{-1} @ U^T @ y
+
+coef_svd = Vt.T @ np.diag(1/S) @ U.T @ y    # 1/S is faster but may fail first if S has zeros
+coefs_svd_pinv = np.linalg.pinv(X) @ y
+
+# Save coefs_svd to a file named coefs_svd.csv
+np.savetxt("coefs_svd_pinv.csv", coefs_svd_pinv, delimiter = ",")
+# Save coefs_svd_pinv to a file named coefs_svd_pinv.csv
+np.savetxt("coefs_svd_pinv.csv", coefs_svd_pinv, delimiter = ",")
+
+
+#X_1 = X[:,1]
+#coeffs_1 = np.linalg.inv(X_1.T @ X_1) @ X_1.T @ y
+
+
+
+# plot the data on X[:, 1] vs y axis 
+# Also plot a regression line with only X[:,0] and X[:,1] as features
+# first make X[:, 1] as np.arange between min and max of X[:,1]
+# then calculate the predictions using the coefficients 
+#X_feature = np.arange(np.min(X_1[:, 0]), np.max(X_1[:, 0]), 0.01)
+#plt.scatter(X[:, 0], y)
+#plt.plot(X_feature , X_feature *  coeffs_1, color = "red")   # coefficients were calculated using all the features 
+#plt.plot()
+#plt.xlabel("Square Feet")
+#plt.ylabel("Price")
+#plt.title("Price vs Square Feet")
+#plt.show()
+#plt.savefig("Price_vs_Square_Feet.png")
+
+# Orthogonal regression fit 
+
+
+# Use X as only the square feet to build a lineae model to predict Price 
+X = df["Square_Feet"].values.reshape(-1, 1)
+y = df["Price"].values
+
+# add a column of 1s to X 
+X = np.hstack((np.ones((n_samples, 1)), X))
+
+coeffs = np.linalg.inv(X.T @ X) @ X.T @ y
+
+
+# Create points for the regression line
+X_feature = np.linspace(np.min(X[:, 1]), np.max(X[:, 1]), 100).reshape(-1, 1)
+X_feature = np.hstack((np.ones((100, 1)), X_feature))
+
+# X_feature = np.arange(np.min(X[:, 1]), np.max(X[:, 1]), 10).reshape(-1, 1)
+
+print(f"min of X[:, 1]: {np.min(X[:, 1])}")
+print(f"max of X[:, 1]: {np.max(X[:, 1])}")
+
+plt.scatter(X[:, 1], y, color = 'blue')
+plt.plot(X_feature[:, 1], X_feature @ coeffs , color = 'red')
+plt.xlabel("Square Feet")
+plt.ylabel("Price")
+plt.title("Price vs Square Feet")
+plt.show()
+
+
+
+
